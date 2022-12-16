@@ -1,7 +1,7 @@
-from handlers import handle_json
+from FoccoERPy.handlers import handle_json
 from datetime import datetime
 
-from exceptions import ErroFocco
+from FoccoERPy.exceptions import ErroFocco
 
 def consulta_ordem(session, id_ordem) -> dict:
     PATH = f'api/Entities/Manufatura.Producao.OrdemProducao/{id_ordem}'
