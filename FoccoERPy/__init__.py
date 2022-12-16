@@ -1,6 +1,3 @@
-import requests
-from urllib.parse import urljoin
-from requests import Response
 from benedict import benedict
 import numpy as np
 from datetime import datetime
@@ -112,4 +109,3 @@ if __name__ == '__main__':
     focco = Focco(FOCCO_URL, FOCCO_TOKEN, FOCCO_EMPRESA)
 
     print(focco.apontamento(8421907, 234, '50', 1))
-    
