@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 import os
 
-from ..FoccoERPy import Focco
+from ..FoccoERPy.Focco import Focco
 
 # Carrega as variaveis de ambiente
 load_dotenv()
