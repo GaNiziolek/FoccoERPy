@@ -1,6 +1,7 @@
 import json
+from benedict import benedict
 
-def handle_json(self, json_dict) -> dict:
+def handle_json(json_dict) -> dict:
     """
         Os retornos da API do FoccoERP organiza os dados no JSON utilizando
         um esquema de organização diferente do usual.
@@ -69,4 +70,4 @@ def handle_json(self, json_dict) -> dict:
                     #print(f'id: {id.get("$id")} = ref: {ref.get("$ref")}')
                     _json = _json.replace(json.dumps(ref), json.dumps(id))
 
-    return json.loads(_json)
+    return benedict(json.loads(_json))
