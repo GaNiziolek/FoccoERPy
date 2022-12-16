@@ -32,7 +32,7 @@ def apontamento_tempo_padrao(session, id_ordem_roteiro: int, quantidade: float,
     ID_TIPO_APONTAMENTO = 'TP'
     ID_FUNCIONARIO = 0
     ORIGEM_APONTAMENTO = 'API'
-    USUARIO = 'Apontamento API'
+    USUARIO = 'Apontamento API GTRP'
 
     PATH = 'api/Entities/Manufatura.Producao.Apontamento.ApontamentoProducao'
 

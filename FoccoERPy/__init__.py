@@ -11,6 +11,8 @@ from core import consulta_ordem
 from core import consulta_operacoes_ordem
 from core import apontamento_tempo_padrao
 
+from exceptions import ErroFocco
+
 class Focco():
     def __init__(self, server_url: str, token_acesso: str, id_empresa: int) -> None:
 
@@ -18,8 +20,22 @@ class Focco():
 
     def apontamento(self, id_ordem: int, id_recurso: int, cod_centro_trabalho: str, quantidade: float):
 
+        def retorno(sucesso: bool, mensagem: str, id_apontamento: int = None):
+
+            return {
+                'sucesso': sucesso,
+                'mensagem': mensagem,
+                'finalizou_ordem': finalizar_ordem,
+                'id_apontamento': id_apontamento
+            }
+
+        finalizar_ordem = False
+
         # Busca informações da Ordem
         info_ordem = consulta_ordem(self.Session, id_ordem)
+
+        if info_ordem.get('Finalizada'):
+            return retorno(False, 'A ordem informada já foi finalizada.')
 
         operacoes = info_ordem.get('RoteirosProducao.$values')
 
@@ -51,24 +67,26 @@ class Focco():
 
         operacao_apontamento = operacoes_setor[index_op]
 
-        finalizar_ordem = False
-
         if operacao_apontamento.get('ID') == ultima_operacao.get('ID') and qtd_apontada + quantidade == info_ordem.get('Quantidade') :
             # Se o ID for igual da última operação da ordem e
             # se a quantidade que ja foi apontada + a quantidade que está
             # sendo apontada agora é igual a quantidade total da ordem
             finalizar_ordem = True
 
-        resposta_focco = apontamento_tempo_padrao(
-                            self.Session,
-                            id_ordem_roteiro = operacao_apontamento.get('ID'),
-                            quantidade       = quantidade,
-                            id_recurso       = id_recurso,
-                            data             = datetime.now(),
-                            finalizar        = finalizar_ordem
-                        )
-        
-        pass
+        try:
+            resposta_focco = apontamento_tempo_padrao(
+                                self.Session,
+                                id_ordem_roteiro = operacao_apontamento.get('ID'),
+                                quantidade       = quantidade,
+                                id_recurso       = id_recurso,
+                                data             = datetime.now(),
+                                finalizar        = finalizar_ordem
+                            )
+        except ErroFocco as e:
+            return retorno(False, e)
+        else:
+            id_apontamento = resposta_focco.get('Value')
+            return retorno(True, 'OK', id_apontamento)
 
 
 if __name__ == '__main__':
@@ -93,4 +111,5 @@ if __name__ == '__main__':
 
     focco = Focco(FOCCO_URL, FOCCO_TOKEN, FOCCO_EMPRESA)
 
-    focco.apontamento(8412095, 229, '50', 1)
+    print(focco.apontamento(8421907, 234, '50', 1))
+    
