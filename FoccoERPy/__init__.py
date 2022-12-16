@@ -1,50 +1,96 @@
 import requests
 from urllib.parse import urljoin
 from requests import Response
+from benedict import benedict
+import numpy as np
+from datetime import datetime
 
-from FoccoERPy.handlers import handle_json
+from FoccoSession import FoccoSession
+
+from core import consulta_ordem
+from core import consulta_operacoes_ordem
+from core import apontamento_tempo_padrao
 
 class Focco():
     def __init__(self, server_url: str, token_acesso: str, id_empresa: int) -> None:
 
-        self.SERVER_URL   = server_url
+        self.Session = FoccoSession(server_url, token_acesso, id_empresa)
+
+    def apontamento(self, id_ordem: int, id_recurso: int, cod_centro_trabalho: str, quantidade: float):
+
+        # Busca informações da Ordem
+        info_ordem = consulta_ordem(self.Session, id_ordem)
+
+        operacoes = info_ordem.get('RoteirosProducao.$values')
+
+        ultima_operacao = operacoes[-1]
+
+        lista_qtd = []
+
+        operacoes_setor = []
+
+        for op in operacoes:
+            op = benedict(op)
+
+            # Se a operacoes pertencer ao mesmo setor/centro de trabalho
+            if cod_centro_trabalho == op.get('Operacao.CentroTrabalho.Codigo'):
+
+                apontamentos_operacao = consulta_operacoes_ordem(self.Session, op.get('ID'))
+
+                qtd_apontada = 0
+
+                for apontamento in apontamentos_operacao:
+                    qtd_apontada += apontamento.get('Quantidade')
+
+                lista_qtd.append(qtd_apontada)
+                operacoes_setor.append(op)
+
+        # A proxima operacao a ser apontada é a subsequente a operacao que tiver a maior qtd_apontada
+
+        index_op = np.argmin(lista_qtd)
+
+        operacao_apontamento = operacoes_setor[index_op]
+
+        finalizar_ordem = False
+
+        if operacao_apontamento.get('ID') == ultima_operacao.get('ID') and qtd_apontada + quantidade == info_ordem.get('Quantidade') :
+            # Se o ID for igual da última operação da ordem e
+            # se a quantidade que ja foi apontada + a quantidade que está
+            # sendo apontada agora é igual a quantidade total da ordem
+            finalizar_ordem = True
+
+        resposta_focco = apontamento_tempo_padrao(
+                            self.Session,
+                            id_ordem_roteiro = operacao_apontamento.get('ID'),
+                            quantidade       = quantidade,
+                            id_recurso       = id_recurso,
+                            data             = datetime.now(),
+                            finalizar        = finalizar_ordem
+                        )
         
-        self.default_headers = {
-            'Authorization': 'Bearer ' + token_acesso,
-            'X-EMPR-ID': id_empresa
-        }
-    
-    def request(self, method, path, params=None, body=None) -> Response:
+        pass
 
-        response = requests.request(
-            method=method,
-            url=urljoin(str(self.FOCCO_URL), path),
-            headers=self.default_headers,
-            params=params,
-            json=body
-        )
 
-        response.raise_for_status()
+if __name__ == '__main__':
 
-        return response
+    from dotenv import load_dotenv
+    import os
 
-    def consulta_ordem(self, id_ordem) -> dict:
-        PATH = f'api/Entities/Manufatura.Producao.OrdemProducao/{id_ordem}'
+    # Carrega as variaveis de ambiente
+    load_dotenv()
 
-        response = self.request('GET', PATH)
+    FOCCO_URL   = os.getenv('FOCCO_URL')
+    if not FOCCO_URL:
+        raise EnvironmentError("Não foi possível encontar o valor da variável de ambiente FOCCO_URL")
 
-        return handle_json(response.json())
+    FOCCO_TOKEN = os.getenv('FOCCO_TOKEN')
+    if not FOCCO_TOKEN:
+        raise EnvironmentError("Não foi possível encontar o valor da variável de ambiente FOCCO_TOKEN")
 
-    def consulta_operacoes_ordem(self, id_roteiro: int) -> dict:
-        
-        PATH = 'api/Commands/Manufatura.Producao.Apontamento.GetApontamentosByOrdemRoteiroCommand'
+    FOCCO_EMPRESA = os.getenv('FOCCO_EMPRESA')
+    if not FOCCO_EMPRESA:
+        raise EnvironmentError("Não foi possível encontar o valor da variável de ambiente FOCCO_EMPRESA")
 
-        BODY = {
-            'take': None,
-            'skip': None,
-            'ordemRoteiroID': id_roteiro
-        }
+    focco = Focco(FOCCO_URL, FOCCO_TOKEN, FOCCO_EMPRESA)
 
-        response = self.request('POST', PATH, body=BODY)
-
-        return handle_json(response.json())
+    focco.apontamento(8412095, 229, '50', 1)
