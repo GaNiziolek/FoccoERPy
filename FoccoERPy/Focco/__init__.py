@@ -62,7 +62,7 @@ class Focco():
                 operacoes_setor.append(op)
 
         if not operacoes_setor:
-            raise ErroFocco(f"A ordem '{id_ordem}' não possui nenhuma operação no setor {cod_centro_trabalho}.")
+            return retorno(False, f"A ordem '{id_ordem}' não possui nenhuma operação no setor {cod_centro_trabalho}.")
 
         # A proxima operacao a ser apontada é a subsequente a operacao que tiver a maior qtd_apontada
         index_op = np.argmin(lista_qtd)
