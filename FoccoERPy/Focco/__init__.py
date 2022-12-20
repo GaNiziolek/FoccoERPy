@@ -83,7 +83,7 @@ class Focco():
                                 finalizar        = finalizar_ordem
                             )
         except ErroFocco as e:
-            return retorno(False, e)
+            return retorno(False, repr(e))
         else:
             id_apontamento = resposta_focco.get('Value')
             return retorno(True, 'OK', id_apontamento)
@@ -111,4 +111,4 @@ if __name__ == '__main__':
 
     focco = Focco(FOCCO_URL, FOCCO_TOKEN, FOCCO_EMPRESA)
 
-    print(focco.apontamento(8421907, 234, '50', 1))
+    print(focco.apontamento(8356544, 233, '50', 1))
