@@ -61,8 +61,10 @@ class Focco():
                 lista_qtd.append(qtd_apontada)
                 operacoes_setor.append(op)
 
-        # A proxima operacao a ser apontada é a subsequente a operacao que tiver a maior qtd_apontada
+        if not operacoes_setor:
+            raise ErroFocco(f"A ordem '{id_ordem}' não possui nenhuma operação no setor {cod_centro_trabalho}.")
 
+        # A proxima operacao a ser apontada é a subsequente a operacao que tiver a maior qtd_apontada
         index_op = np.argmin(lista_qtd)
 
         operacao_apontamento = operacoes_setor[index_op]
@@ -111,4 +113,4 @@ if __name__ == '__main__':
 
     focco = Focco(FOCCO_URL, FOCCO_TOKEN, FOCCO_EMPRESA)
 
-    print(focco.apontamento(8356544, 233, '50', 1))
+    print(focco.apontamento(8356493, 229, '4', 1))
