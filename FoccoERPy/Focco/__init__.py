@@ -1,6 +1,7 @@
 from benedict import benedict
 import numpy as np
 from datetime import datetime
+from requests.exceptions import HTTPError
 
 import sys
 sys.path.append("./")
@@ -32,7 +33,13 @@ class Focco():
         finalizar_ordem = False
 
         # Busca informações da Ordem
-        info_ordem = consulta_ordem(self.Session, id_ordem)
+        try:
+            info_ordem = consulta_ordem(self.Session, id_ordem)
+        except HTTPError as e:
+            if e.response.status_code == 404:
+                return retorno(False, f'A ordem {id_ordem} não foi encontrada.')
+            else:
+                raise e
 
         if info_ordem.get('Finalizada'):
             return retorno(False, 'A ordem informada já foi finalizada.')
@@ -113,4 +120,4 @@ if __name__ == '__main__':
 
     focco = Focco(FOCCO_URL, FOCCO_TOKEN, FOCCO_EMPRESA)
 
-    print(focco.apontamento(8356493, 229, '4', 1))
+    print(focco.apontamento(15902474, 229, '4', 1))
