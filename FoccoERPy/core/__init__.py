@@ -15,6 +15,8 @@ def consulta_ordem(session, id_ordem) -> dict:
     except HTTPError as e:
         if '404 Client Error: Not Found for url' in str(e):
             raise OrdemNaoEncontrada
+        else:
+            raise e
         
     
 def consulta_operacoes_ordem(session, id_roteiro: int) -> list:
