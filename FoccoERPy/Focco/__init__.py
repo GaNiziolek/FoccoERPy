@@ -191,6 +191,8 @@ if __name__ == '__main__':
     from dotenv import load_dotenv
     import os
 
+    from FoccoERPy.core import impressao_etiqueta
+
     # Carrega as variaveis de ambiente
     load_dotenv()
 
@@ -208,4 +210,15 @@ if __name__ == '__main__':
 
     focco = Focco(FOCCO_URL, FOCCO_TOKEN, FOCCO_EMPRESA)
 
-    print(focco.apontamento_por_sequencia(8792710, 229, '4', 1, 1))
+    #print(focco.apontamento_por_sequencia(8792710, 229, '4', 1, 1))
+
+    print(impressao_etiqueta(
+                session=focco.Session,
+                bearer='CfDJ8LKjHueZYEBBpHKrwAhYEE46auGpUjNxycS05P57ui3ADoFNv_LmuPWo0DI-PGx_bfD39U5GLYmw66PnpIry6SP_bZHlysdfog_40mVBU-bwX3oN9iT92zEnLlAPrNl4BBtCb1P-QK5pncunAr4WgB_p-FkgFC7ycIeyPKpfRKFZEZIvhLy5diIIPBXdXUyrm-6SMCXUu-eOwLk7EL7HC5I1pZAQ-EFscTHK1O4vSC-ibYF8HaTvW-QrUjqoWeJk-ZQAEuYnXLrJfMoRrixToNHxthaAJGGOcVL9nmEc9-Xn4AQKpKVVqE3U1U60goxuKtsatcQq4vcCVwpII9LZZoPNKOkx5UIqHvEX_roQFbiH3widephKAbrcXEFOZQhLVOkqLTeXL8E4JZuoTmXohMxxwiyZ2xgiSRXjaZjfsKsmIsfdeKejVQ5LkHvmCZRd8WHHoqVMTuMd750IYDcoUbXFrursCfayOmaCE7PwAPxepBWRH-C24M-unK0gp-MkaA',
+                modelo_etiqueta='(203)-Etiqueta Produção - GERAL EMBALAGEM',
+                id_empresa=2,
+                id_apontamento=25130075, 
+                qtd_copias=1,
+                nome_impressora='ZebraTesteFocco',
+                chave_servico_impressao='SERVER-INUSITTA'
+        ))

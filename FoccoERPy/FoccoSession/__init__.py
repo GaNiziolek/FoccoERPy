@@ -16,10 +16,14 @@ class FoccoSession(Session):
 
         complete_url = urljoin(str(self.SERVER_URL), path)
 
+        headers = kwargs.get('headers', self.default_headers)
+
+        kwargs.pop('headers', None)
+
         response = super().request(
             method  = method,
             url     = complete_url,
-            headers = self.default_headers,
+            headers = headers,
             *args,
             **kwargs
         )
