@@ -3,8 +3,9 @@ from datetime import datetime
 from requests.exceptions import HTTPError
 from FoccoERPy.exceptions import ErroFocco
 from FoccoERPy.exceptions import OrdemNaoEncontrada
+from FoccoERPy.FoccoSession import FoccoSession
 
-def consulta_ordem(session, id_ordem) -> dict:
+def consulta_ordem(session: FoccoSession, id_ordem) -> dict:
     PATH = f'api/Entities/Manufatura.Producao.OrdemProducao/{id_ordem}'
 
     try:
@@ -18,8 +19,7 @@ def consulta_ordem(session, id_ordem) -> dict:
         else:
             raise e
         
-    
-def consulta_operacoes_ordem(session, id_roteiro: int) -> list:
+def consulta_operacoes_ordem(session: FoccoSession, id_roteiro: int) -> list:
     
     PATH = 'api/Commands/Manufatura.Producao.Apontamento.GetApontamentosByOrdemRoteiroCommand'
 
@@ -33,7 +33,7 @@ def consulta_operacoes_ordem(session, id_roteiro: int) -> list:
 
     return handle_json(response.json()).get('$values')
 
-def apontamento_tempo_padrao(session, id_ordem_roteiro: int, quantidade: float, 
+def apontamento_tempo_padrao(session: FoccoSession, id_ordem_roteiro: int, quantidade: float, 
                              id_recurso: int, data: datetime, finalizar: bool):
     """
         Apontamento por tempo padrão
@@ -75,3 +75,41 @@ def apontamento_tempo_padrao(session, id_ordem_roteiro: int, quantidade: float,
         return handle_json(response.json())
 
     raise ErroFocco(resposta_focco.get('ErrorMessage'))
+
+def impressao_etiqueta(session: FoccoSession, 
+        bearer: str,
+        modelo_etiqueta: str,
+        id_empresa: int,
+        id_apontamento: int,
+        qtd_copias: int,
+        nome_impressora: str,
+        chave_servico_impressao: str
+    ):
+    """
+        Impressao de etiquetas
+    """
+
+    PATH = 'api/utilitarios/v1/ImpressaoEtiqueta'
+
+    HEADERS = {
+        'Authorization': 'Bearer ' + bearer
+    }
+
+    BODY = {
+        'modeloEtiqueta':        modelo_etiqueta,
+        'empresaId':             id_empresa,
+        'apontamentoId':         id_apontamento,
+        'numeroCopias':          qtd_copias,
+        'nomeImpressora':        nome_impressora,
+        'chaveServicoImpressao': chave_servico_impressao
+    }
+
+    response = session.request('POST', PATH, json=BODY, headers=HEADERS)
+
+    resposta_focco = handle_json(response.json())
+
+    if resposta_focco.get('Succeeded'):
+        return resposta_focco
+
+    raise ErroFocco(resposta_focco.get('ErrorMessage'))
+
