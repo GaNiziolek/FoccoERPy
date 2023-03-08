@@ -159,7 +159,10 @@ class Focco():
         if not operacoes_setor:
             return retorno(False, f"A ordem '{id_ordem}' não possui nenhuma operação no setor {cod_centro_trabalho}.")
 
-        operacao_apontamento = operacoes_setor[seq_operacao - 1]
+        try:
+            operacao_apontamento = operacoes_setor[seq_operacao - 1]
+        except IndexError:
+            return retorno(False, f"Não é possível apontar a operação número {seq_operacao}, a ordem '{id_ordem}' possui somente {len(operacoes_setor)} operações no setor {cod_centro_trabalho}")
 
         if (
                 operacao_apontamento.get('ID') == ultima_operacao.get('ID')   # Se o ID da ordem for igual ao ID da última ordem desse Centro de trabalho
