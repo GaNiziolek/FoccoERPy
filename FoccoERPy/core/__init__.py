@@ -1,15 +1,24 @@
 from FoccoERPy.handlers import handle_json
 from datetime import datetime
-
+from requests.exceptions import HTTPError
 from FoccoERPy.exceptions import ErroFocco
+from FoccoERPy.exceptions import OrdemNaoEncontrada
 
 def consulta_ordem(session, id_ordem) -> dict:
     PATH = f'api/Entities/Manufatura.Producao.OrdemProducao/{id_ordem}'
 
-    response = session.request('GET', PATH)
+    try:
+        response = session.request('GET', PATH)
 
-    return handle_json(response.json())
+        return handle_json(response.json())
 
+    except HTTPError as e:
+        if '404 Client Error: Not Found for url' in str(e):
+            raise OrdemNaoEncontrada
+        else:
+            raise e
+        
+    
 def consulta_operacoes_ordem(session, id_roteiro: int) -> list:
     
     PATH = 'api/Commands/Manufatura.Producao.Apontamento.GetApontamentosByOrdemRoteiroCommand'

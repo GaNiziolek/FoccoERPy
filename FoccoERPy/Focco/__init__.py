@@ -42,7 +42,7 @@ class Focco():
                 raise e
 
         if info_ordem.get('Finalizada'):
-            return retorno(False, 'A ordem informada já foi finalizada.')
+            return retorno(True, 'A ordem informada já foi finalizada.')
 
         operacoes = info_ordem.get('RoteirosProducao.$values')
 

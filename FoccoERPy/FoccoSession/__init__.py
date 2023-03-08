@@ -9,7 +9,7 @@ class FoccoSession(Session):
         
         self.default_headers = {
             'Authorization': 'Bearer ' + token_acesso,
-            'X-EMPR-ID': id_empresa
+            'X-EMPR-ID': str(id_empresa)
         }
     
     def request(self, method, path, *args, **kwargs):
