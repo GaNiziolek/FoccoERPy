@@ -11,14 +11,19 @@ def consulta_ordem(session: FoccoSession, id_ordem) -> dict:
     try:
         response = session.request('GET', PATH)
 
-        return handle_json(response.json())
+        resposta_focco = handle_json(response.json())
 
+        if not resposta_focco.get('Succeeded'):
+            raise ErroFocco(f"Não teve sucesso na busca da ordem: {resposta_focco.get('ErrorMessage')}")
+        
+        return resposta_focco
+        
     except HTTPError as e:
-        if '404 Client Error: Not Found for url' in str(e):
+        if e.response.status_code == 404:
             raise OrdemNaoEncontrada
         else:
             raise e
-        
+    
 def consulta_operacoes_ordem(session: FoccoSession, id_roteiro: int) -> list:
     
     PATH = 'api/Commands/Manufatura.Producao.Apontamento.GetApontamentosByOrdemRoteiroCommand'
@@ -31,7 +36,12 @@ def consulta_operacoes_ordem(session: FoccoSession, id_roteiro: int) -> list:
 
     response = session.request('POST', PATH, json=BODY)
 
-    return handle_json(response.json()).get('$values')
+    resposta_focco = handle_json(response.json()).get('$values')
+
+    if not resposta_focco.get('Succeeded'):
+        raise ErroFocco(f"Não teve sucesso na busca de operações: {resposta_focco.get('ErrorMessage')}")
+    
+    return resposta_focco
 
 def apontamento_tempo_padrao(session: FoccoSession, id_ordem_roteiro: int, quantidade: float, 
                              id_recurso: int, data: datetime, finalizar: bool):
@@ -71,10 +81,10 @@ def apontamento_tempo_padrao(session: FoccoSession, id_ordem_roteiro: int, quant
 
     resposta_focco = handle_json(response.json())
 
-    if resposta_focco.get('Succeeded'):
-        return handle_json(response.json())
-
-    raise ErroFocco(resposta_focco.get('ErrorMessage'))
+    if not resposta_focco.get('Succeeded'):
+        raise ErroFocco(f"Não teve sucesso no apontamento: {resposta_focco.get('ErrorMessage')}")
+    
+    return resposta_focco
 
 def impressao_etiqueta(session: FoccoSession, 
         bearer: str,
@@ -108,8 +118,9 @@ def impressao_etiqueta(session: FoccoSession,
 
     resposta_focco = handle_json(response.json())
 
-    if resposta_focco.get('Succeeded'):
-        return resposta_focco
+    if not resposta_focco.get('Succeeded'):
+        raise ErroFocco(f"Não teve sucesso na impressão de etiquetas: {resposta_focco.get('ErrorMessage')}")
+    
+    return resposta_focco
 
-    raise ErroFocco(resposta_focco.get('ErrorMessage'))
 

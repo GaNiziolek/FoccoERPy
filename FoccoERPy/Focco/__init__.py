@@ -13,6 +13,10 @@ from FoccoERPy.core import consulta_operacoes_ordem
 from FoccoERPy.core import apontamento_tempo_padrao
 
 from FoccoERPy.exceptions import ErroFocco
+from FoccoERPy.exceptions import OperacaoNaoEncontrada
+from FoccoERPy.exceptions import SetorSemOperacoes
+from FoccoERPy.exceptions import OrdemFinalizada
+from FoccoERPy.exceptions import OrdemNaoEncontrada
 
 class Focco():
     def __init__(self, server_url: str, token_acesso: str, id_empresa: int) -> None:
@@ -21,34 +25,19 @@ class Focco():
 
     def apontamento_cego_por_setor(self, id_ordem: int, id_recurso: int, cod_centro_trabalho: str, quantidade: float):
         """
-        Antes de realizar o apontamento, é feito uma busca nas operações do roteiro deste centro de trabalho,
-        e a operação a ser apontada é sempre a próxima operação com a menor quantidade apontada, por exemplo:
-            Para uma peça com 4 operações, sendo a quantidade apontada de cada uma -> (1,1,0,0), o próxima
-            operação que será escolhida para apontar será a 3.
+            Antes de realizar o apontamento, é feito uma busca nas operações do roteiro deste centro de trabalho,
+            e a operação a ser apontada é sempre a próxima operação com a menor quantidade apontada, por exemplo:
+                Para uma peça com 4 operações, sendo a quantidade apontada de cada uma -> (1,1,0,0), o próxima
+                operação que será escolhida para apontar será a 3.
         """
-
-        def retorno(sucesso: bool, mensagem: str, id_apontamento: int = None):
-
-            return {
-                'sucesso': sucesso,
-                'mensagem': mensagem,
-                'finalizou_ordem': finalizar_ordem,
-                'id_apontamento': id_apontamento
-            }
 
         finalizar_ordem = False
 
         # Busca informações da Ordem
-        try:
-            info_ordem = consulta_ordem(self.Session, id_ordem)
-        except HTTPError as e:
-            if e.response.status_code == 404:
-                return retorno(False, f'A ordem {id_ordem} não foi encontrada.')
-            else:
-                raise e
+        info_ordem = consulta_ordem(self.Session, id_ordem)
 
         if info_ordem.get('Finalizada'):
-            return retorno(True, 'A ordem informada já foi finalizada.')
+            raise OrdemFinalizada(id_ordem)
 
         operacoes = info_ordem.get('RoteirosProducao.$values')
 
@@ -75,7 +64,7 @@ class Focco():
                 operacoes_setor.append(op)
 
         if not operacoes_setor:
-            return retorno(False, f"A ordem '{id_ordem}' não possui nenhuma operação no setor {cod_centro_trabalho}.")
+            raise SetorSemOperacoes(id_ordem, cod_centro_trabalho)
 
         # A proxima operacao a ser apontada é a subsequente a operacao que tiver a maior qtd_apontada
         index_op = np.argmin(lista_qtd)
@@ -88,49 +77,33 @@ class Focco():
             # sendo apontada agora é igual a quantidade total da ordem
             finalizar_ordem = True
 
-        try:
-            resposta_focco = apontamento_tempo_padrao(
-                                self.Session,
-                                id_ordem_roteiro = operacao_apontamento.get('ID'),
-                                quantidade       = quantidade,
-                                id_recurso       = id_recurso,
-                                data             = datetime.now(),
-                                finalizar        = finalizar_ordem
-                            )
-        except ErroFocco as e:
-            return retorno(False, repr(e))
-        else:
-            id_apontamento = resposta_focco.get('Value')
-            return retorno(True, 'OK', id_apontamento)
+        resposta_focco = apontamento_tempo_padrao(
+                            self.Session,
+                            id_ordem_roteiro = operacao_apontamento.get('ID'),
+                            quantidade       = quantidade,
+                            id_recurso       = id_recurso,
+                            data             = datetime.now(),
+                            finalizar        = finalizar_ordem
+                        )
+        id_apontamento = resposta_focco.get('Value')
 
-    def apontamento_por_sequencia(self, id_ordem: int, id_recurso: int, cod_centro_trabalho: str, quantidade: float, seq_operacao: int, pode_finalizar: bool = False):
+        return id_apontamento
+
+    def apontamento_por_sequencia(self, id_ordem: int, id_recurso: int, cod_centro_trabalho: str, quantidade: float, seq_operacao: int, pode_finalizar: bool = False) -> int:
         """
         Realiza o apontamento da N esima operacão desse roteiro e centro de trabalho. 
         Se :pode_finalizar = True, e a operação requisitada for a última quantidade e operacão do centro de trabalho, entao finaliza a ordem
+
+        Retorna o ID do apontamento
         """
-
-        def retorno(sucesso: bool, mensagem: str, id_apontamento: int = None):
-
-            return {
-                'sucesso': sucesso,
-                'mensagem': mensagem,
-                'finalizou_ordem': finalizar_ordem,
-                'id_apontamento': id_apontamento
-            }
 
         finalizar_ordem = False
 
         # Busca informações da Ordem
-        try:
-            info_ordem = consulta_ordem(self.Session, id_ordem)
-        except HTTPError as e:
-            if e.response.status_code == 404:
-                return retorno(False, f'A ordem {id_ordem} não foi encontrada.')
-            else:
-                raise e
+        info_ordem = consulta_ordem(self.Session, id_ordem)
 
         if info_ordem.get('Finalizada'):
-            return retorno(True, 'A ordem informada já foi finalizada.')
+            raise OrdemFinalizada(id_ordem)
 
         operacoes = info_ordem.get('RoteirosProducao.$values')
 
@@ -157,12 +130,12 @@ class Focco():
                 operacoes_setor.append(op)
 
         if not operacoes_setor:
-            return retorno(False, f"A ordem '{id_ordem}' não possui nenhuma operação no setor {cod_centro_trabalho}.")
+            raise SetorSemOperacoes(id_ordem, cod_centro_trabalho)
 
         try:
             operacao_apontamento = operacoes_setor[seq_operacao - 1]
         except IndexError:
-            return retorno(False, f"Não é possível apontar a operação número {seq_operacao}, a ordem '{id_ordem}' possui somente {len(operacoes_setor)} operações no setor {cod_centro_trabalho}")
+            raise OperacaoNaoEncontrada(id_ordem, seq_operacao, cod_centro_trabalho)
 
         if (
                 operacao_apontamento.get('ID') == ultima_operacao.get('ID')   # Se o ID da ordem for igual ao ID da última ordem desse Centro de trabalho
@@ -174,21 +147,18 @@ class Focco():
             # sendo apontada agora é igual a quantidade total da ordem
             finalizar_ordem = True
 
-        try:
-            resposta_focco = apontamento_tempo_padrao(
-                                self.Session,
-                                id_ordem_roteiro = operacao_apontamento.get('ID'),
-                                quantidade       = quantidade,
-                                id_recurso       = id_recurso,
-                                data             = datetime.now(),
-                                finalizar        = finalizar_ordem
-                            )
-        except ErroFocco as e:
-            return retorno(False, repr(e))
-        else:
-            id_apontamento = resposta_focco.get('Value')
-            return retorno(True, 'OK', id_apontamento)
-        
+        resposta_focco = apontamento_tempo_padrao(
+                            self.Session,
+                            id_ordem_roteiro = operacao_apontamento.get('ID'),
+                            quantidade       = quantidade,
+                            id_recurso       = id_recurso,
+                            data             = datetime.now(),
+                            finalizar        = finalizar_ordem
+                        )
+        id_apontamento = resposta_focco.get('Value')
+
+        return id_apontamento
+     
 if __name__ == '__main__':
 
     from dotenv import load_dotenv
