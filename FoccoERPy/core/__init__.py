@@ -121,6 +121,6 @@ def impressao_etiqueta(session: FoccoSession,
     if not resposta_focco.get('Succeeded'):
         raise ErroFocco(f"Não teve sucesso na impressão de etiquetas: {resposta_focco.get('ErrorMessage')}")
     
-    return resposta_focco
+    return resposta_focco.get('Succeeded')
 
 
