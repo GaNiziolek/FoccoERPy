@@ -13,9 +13,6 @@ def consulta_ordem(session: FoccoSession, id_ordem: int) -> dict:
 
         resposta_focco = handle_json(response.json())
 
-        if not resposta_focco.get('Succeeded'):
-            raise ErroFocco(f"Não teve sucesso na busca da ordem: {resposta_focco.get('ErrorMessage')}")
-        
         return resposta_focco
         
     except HTTPError as e:
@@ -23,6 +20,9 @@ def consulta_ordem(session: FoccoSession, id_ordem: int) -> dict:
             raise OrdemNaoEncontrada(id_ordem)
         else:
             raise e
+    
+    except Exception as e:
+        raise ErroFocco(f"Não teve sucesso na busca da ordem: {str(e)}")
     
 def consulta_operacoes_ordem(session: FoccoSession, id_roteiro: int) -> list:
     
