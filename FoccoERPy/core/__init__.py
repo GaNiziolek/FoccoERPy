@@ -5,7 +5,7 @@ from FoccoERPy.exceptions import ErroFocco
 from FoccoERPy.exceptions import OrdemNaoEncontrada
 from FoccoERPy.FoccoSession import FoccoSession
 
-def consulta_ordem(session: FoccoSession, id_ordem) -> dict:
+def consulta_ordem(session: FoccoSession, id_ordem: int) -> dict:
     PATH = f'api/Entities/Manufatura.Producao.OrdemProducao/{id_ordem}'
 
     try:
@@ -20,7 +20,7 @@ def consulta_ordem(session: FoccoSession, id_ordem) -> dict:
         
     except HTTPError as e:
         if e.response.status_code == 404:
-            raise OrdemNaoEncontrada
+            raise OrdemNaoEncontrada(id_ordem)
         else:
             raise e
     
