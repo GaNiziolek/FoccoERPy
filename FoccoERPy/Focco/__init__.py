@@ -23,7 +23,7 @@ class Focco():
 
         self.Session = FoccoSession.FoccoSession(server_url, token_acesso, id_empresa)
 
-    def apontamento_cego_por_setor(self, id_ordem: int, id_recurso: int, cod_centro_trabalho: str, quantidade: float):
+    def apontamento_cego_por_setor(self, id_ordem: int, id_recurso: int, cod_centro_trabalho: str, quantidade: float) -> dict:
         """
             Antes de realizar o apontamento, é feito uma busca nas operações do roteiro deste centro de trabalho,
             e a operação a ser apontada é sempre a próxima operação com a menor quantidade apontada, por exemplo:
@@ -87,9 +87,12 @@ class Focco():
                         )
         id_apontamento = resposta_focco.get('Value')
 
-        return id_apontamento
+        return {
+            'id_apontamento': id_apontamento, 
+            'finalizou_ordem': finalizar_ordem
+        }
 
-    def apontamento_por_sequencia(self, id_ordem: int, id_recurso: int, cod_centro_trabalho: str, quantidade: float, seq_operacao: int, pode_finalizar: bool = False) -> int:
+    def apontamento_por_sequencia(self, id_ordem: int, id_recurso: int, cod_centro_trabalho: str, quantidade: float, seq_operacao: int, pode_finalizar: bool = False) -> dict:
         """
         Realiza o apontamento da N esima operacão desse roteiro e centro de trabalho. 
         Se :pode_finalizar = True, e a operação requisitada for a última quantidade e operacão do centro de trabalho, entao finaliza a ordem
@@ -157,7 +160,10 @@ class Focco():
                         )
         id_apontamento = resposta_focco.get('Value')
 
-        return id_apontamento
+        return {
+            'id_apontamento': id_apontamento, 
+            'finalizou_ordem': finalizar_ordem
+        }
      
 if __name__ == '__main__':
 
