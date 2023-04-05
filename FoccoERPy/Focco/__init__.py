@@ -190,5 +190,5 @@ if __name__ == '__main__':
 
     focco = Focco(FOCCO_URL, FOCCO_TOKEN, FOCCO_EMPRESA)
 
-    print(focco.apontamento_por_sequencia(8958861, 233, '50', 1, 1))
+    print(focco.apontamento_por_sequencia(8959245, 233, '50', 1, 1))
 

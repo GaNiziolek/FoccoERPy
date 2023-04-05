@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "FoccoERPy"
-version = "0.2.10"
+version = "0.2.11"
 authors = [
   { name="Gabriel Niziolek", email="ganiziolek@gmail.com" },
 ]
