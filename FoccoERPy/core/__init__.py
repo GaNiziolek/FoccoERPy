@@ -38,6 +38,9 @@ def consulta_operacoes_ordem(session: FoccoSession, id_roteiro: int) -> list:
 
     resposta_focco = handle_json(response.json()).get('$values')
 
+    if not resposta_focco:
+        return None
+
     if not resposta_focco.get('Succeeded'):
         raise ErroFocco(f"Não teve sucesso na busca de operações: {resposta_focco.get('ErrorMessage')}")
     
