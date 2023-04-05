@@ -110,6 +110,9 @@ class Focco():
 
         operacoes = info_ordem.get('RoteirosProducao.$values')
 
+        # Ordena as operações pela chave Seq
+        operacoes = sorted(operacoes, key=lambda d: d['Seq'])
+
         ultima_operacao = operacoes[-1]
 
         lista_qtd = []
@@ -190,5 +193,5 @@ if __name__ == '__main__':
 
     focco = Focco(FOCCO_URL, FOCCO_TOKEN, FOCCO_EMPRESA)
 
-    print(focco.apontamento_por_sequencia(8959245, 233, '50', 1, 1))
+    print(focco.apontamento_por_sequencia(8961557, 233, '50', 1, 1))
 
