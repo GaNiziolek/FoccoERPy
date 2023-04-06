@@ -92,7 +92,7 @@ class Focco():
             'finalizou_ordem': finalizar_ordem
         }
 
-    def apontamento_por_sequencia(self, id_ordem: int, id_recurso: int, cod_centro_trabalho: str, quantidade: float, seq_operacao: int, pode_finalizar: bool = False) -> dict:
+    def apontamento_por_sequencia(self, id_ordem: int, id_recurso: int, cod_centro_trabalho: str, quantidade: float, seq_operacao: int) -> dict:
         """
         Realiza o apontamento da N esima operacão desse roteiro e centro de trabalho. 
         Se :pode_finalizar = True, e a operação requisitada for a última quantidade e operacão do centro de trabalho, entao finaliza a ordem
@@ -147,7 +147,6 @@ class Focco():
         if (
                 operacao_apontamento.get('ID') == ultima_operacao.get('ID')   # Se o ID da ordem for igual ao ID da última ordem desse Centro de trabalho
                 and qtd_apontada + quantidade == info_ordem.get('Quantidade') # se a qtd dessa operação que já está apontada + qtd a apontar agora for igual a qtd total da ordem
-                and pode_finalizar
             ) :
             # Se o ID for igual da última operação da ordem e
             # se a quantidade que ja foi apontada + a quantidade que está
@@ -193,5 +192,11 @@ if __name__ == '__main__':
 
     focco = Focco(FOCCO_URL, FOCCO_TOKEN, FOCCO_EMPRESA)
 
-    print(focco.apontamento_por_sequencia(8961557, 233, '50', 1, 1))
+    print(focco.apontamento_por_sequencia(
+            id_ordem=8961568, 
+            id_recurso=229, 
+            cod_centro_trabalho='4', 
+            quantidade=1, 
+            seq_operacao=1
+        ))
 
