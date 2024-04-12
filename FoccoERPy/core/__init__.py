@@ -1,3 +1,4 @@
+from typing import Optional
 from FoccoERPy.handlers import handle_json
 from datetime import datetime
 from requests.exceptions import HTTPError
@@ -14,18 +15,18 @@ def consulta_ordem(session: FoccoSession, id_ordem: int) -> dict:
         resposta_focco = handle_json(response.json())
 
         return resposta_focco
-        
+
     except HTTPError as e:
         if e.response.status_code == 404:
             raise OrdemNaoEncontrada(id_ordem)
         else:
             raise e
-    
+
     except Exception as e:
         raise ErroFocco(f"Não teve sucesso na busca da ordem: {str(e)}")
-    
+
 def consulta_operacoes_ordem(session: FoccoSession, id_roteiro: int) -> list:
-    
+
     PATH = 'api/Commands/Manufatura.Producao.Apontamento.GetApontamentosByOrdemRoteiroCommand'
 
     BODY = {
@@ -39,24 +40,30 @@ def consulta_operacoes_ordem(session: FoccoSession, id_roteiro: int) -> list:
     try:
         response.raise_for_status()
     except Exception as e:
-        raise ErroFocco(f"Não teve sucesso na busca de operações: {resposta_focco.get('ErrorMessage')}")
+        raise ErroFocco("Não teve sucesso na busca de operações")
 
     resposta_focco = handle_json(response.json()).get('$values')
 
     if not resposta_focco:
         return None
-    
+
     return resposta_focco
 
-def apontamento_tempo_padrao(session: FoccoSession, id_ordem_roteiro: int, quantidade: float, 
-                             id_recurso: int, data: datetime, finalizar: bool):
+def apontamento_tempo_padrao(
+        session: FoccoSession,
+        id_ordem_roteiro: int,
+        quantidade: float,
+        data: datetime = datetime.now(),
+        finalizar: bool = False,
+        id_tipo_apontamento: str = 'TP',
+        origem_apontamento: str = 'API',
+        usuario: str = 'Apontamento API GTRP',
+        id_funcionario: Optional[int] = None,
+        id_recurso: Optional[int] = None,
+    ):
     """
         Apontamento por tempo padrão
     """
-    ID_TIPO_APONTAMENTO = 'TP'
-    ID_FUNCIONARIO = 0
-    ORIGEM_APONTAMENTO = 'API'
-    USUARIO = 'Apontamento API GTRP'
 
     PATH = 'api/Entities/Manufatura.Producao.Apontamento.ApontamentoProducao'
 
@@ -67,20 +74,24 @@ def apontamento_tempo_padrao(session: FoccoSession, id_ordem_roteiro: int, quant
         'Quantidade': quantidade,
         'DataApontamento': data.isoformat(),
         'TipoApontamento': {
-            'ID': ID_TIPO_APONTAMENTO
-        },
-        'Funcionario': {
-            'ID': ID_FUNCIONARIO
+            'ID': id_tipo_apontamento
         },
         'Final': finalizar,
-        'Usuario': USUARIO,
-        'OrigemApontamento': ORIGEM_APONTAMENTO,
-        'ApontamentoMaquina': {
+        'Usuario': usuario,
+        'OrigemApontamento': origem_apontamento,
+    }
+
+    if id_funcionario is not None:
+        BODY['Funcionario'] = {
+            'ID': id_funcionario
+        }
+
+    if id_recurso is not None:
+        BODY['ApontamentoMaquina'] = {
             'Maquina': {
                 'ID': id_recurso
             }
         }
-    }
 
     response = session.request('POST', PATH, json=BODY)
 
@@ -88,7 +99,7 @@ def apontamento_tempo_padrao(session: FoccoSession, id_ordem_roteiro: int, quant
 
     if not resposta_focco.get('Succeeded'):
         raise ErroFocco(f"Não teve sucesso no apontamento: {resposta_focco.get('ErrorMessage')}")
-    
+
     return resposta_focco
 
 def impressao_etiqueta(session: FoccoSession, 
