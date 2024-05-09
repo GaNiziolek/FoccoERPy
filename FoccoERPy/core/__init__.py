@@ -53,7 +53,7 @@ def apontamento_tempo_padrao(
         session: FoccoSession,
         id_ordem_roteiro: int,
         quantidade: float,
-        data: datetime = datetime.now(),
+        data: Optional[datetime] = None,
         finalizar: bool = False,
         id_tipo_apontamento: str = 'TP',
         origem_apontamento: str = 'API',
@@ -66,6 +66,9 @@ def apontamento_tempo_padrao(
     """
 
     PATH = 'api/Entities/Manufatura.Producao.Apontamento.ApontamentoProducao'
+
+    if data is None:
+        data = datetime.now()
 
     BODY = {
         'OrdemRoteiro': {
