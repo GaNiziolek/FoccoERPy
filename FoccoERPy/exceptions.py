@@ -39,6 +39,17 @@ class SetorSemOperacoes(Exception):
         self.msg = f"A ordem '{id_ordem}' não possui nenhuma operação no setor {cod_centro_trabalho}."
         super().__init__(self.msg)
 
+class OrdemSemOperacoes(Exception):
+    def __init__(self, id_ordem: int):
+        """
+            Operações da ordem não encontradas
+        """
+        self.id_ordem = id_ordem
+
+        self.msg = f"A ordem '{id_ordem}' não possui nenhuma operação."
+        super().__init__(self.msg)
+
+
 class OrdemFinalizada(Exception):
     def __init__(self, id_ordem: int):
         """

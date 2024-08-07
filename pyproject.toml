@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "FoccoERPy"
-version = "0.3.1"
+version = "1.0.0"
 authors = [
   { name="Gabriel Niziolek", email="ganiziolek@gmail.com" },
 ]
@@ -16,12 +16,12 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-dependencies = [
-  "requests >= 2.28",
-  "python-benedict >= 0.27",
-  "numpy >= 1.23"
-]
+dynamic = ["dependencies", "optional-dependencies"]
 
 [project.urls]
 "Homepage" = "https://github.com/GaNiziolek/FoccoERPy"
 "Bug Tracker" = "https://github.com/GaNiziolek/FoccoERPy/issues"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+optional-dependencies = {dev = {file = ["requirements-dev.txt"]}}
